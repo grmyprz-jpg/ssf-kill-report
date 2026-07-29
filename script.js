@@ -1,83 +1,140 @@
-// ===========================
-// SSF Kill Report
-// ===========================
+// ======================================
+// SSF Kill Tracker v1.0
+// ======================================
 
-let players = JSON.parse(localStorage.getItem("players")) || [];
+let players = JSON.parse(localStorage.getItem("ssf_players"));
 
-function savePlayers() {
-    localStorage.setItem("players", JSON.stringify(players));
+if (!players) {
+
+players = [
+
+{
+name:"NoHereSmall",
+startKills:0,
+currentKills:0
+},
+
+{
+name:"Alpharius XX",
+startKills:0,
+currentKills:0
+},
+
+{
+name:"Stark58000",
+startKills:0,
+currentKills:0
+},
+
+{
+name:"Sweet Melora",
+startKills:0,
+currentKills:0
+},
+
+{
+name:"sir mojo",
+startKills:0,
+currentKills:0
+},
+
+{
+name:"Darkssade",
+startKills:0,
+currentKills:0
+},
+
+{
+name:"El Sirocco",
+startKills:0,
+currentKills:0
+},
+
+{
+name:"Rp88",
+startKills:0,
+currentKills:0
+},
+
+// Les autres joueurs seront ajoutés ici
+];
+
+savePlayers();
+
 }
 
-function renderPlayers() {
-    const tbody = document.getElementById("playerTable");
-    tbody.innerHTML = "";
-
-    players.sort((a, b) => b.current - a.current);
-
-    players.forEach((player, index) => {
-        const gain = player.current - player.start;
-
-        tbody.innerHTML += `
-        <tr>
-            <td>${index + 1}</td>
-            <td>${player.name}</td>
-            <td>${player.start.toLocaleString()}</td>
-            <td>${player.current.toLocaleString()}</td>
-            <td style="color:#ff4444;font-weight:bold;">
-                +${gain.toLocaleString()}
-            </td>
-            <td>
-                <button onclick="updatePlayer(${index})">✏️</button>
-                <button onclick="deletePlayer(${index})">🗑️</button>
-            </td>
-        </tr>
-        `;
-    });
+function savePlayers(){
+localStorage.setItem("ssf_players",JSON.stringify(players));
 }
 
-function addPlayer() {
-    const name = document.getElementById("name").value.trim();
-    const kills = Number(document.getElementById("kills").value);
-
-    if (!name || isNaN(kills)) {
-        alert("Remplis tous les champs.");
-        return;
-    }
-
-    players.push({
-        name: name,
-        start: kills,
-        current: kills
-    });
-
-    savePlayers();
-    renderPlayers();
-
-    document.getElementById("name").value = "";
-    document.getElementById("kills").value = "";
+function gain(player){
+return player.currentKills-player.startKills;
 }
 
-function updatePlayer(index) {
-    const newKills = prompt(
-        "Nouveau total de kills :",
-        players[index].current
-    );
+function renderPlayers(){
 
-    if (newKills === null) return;
+const tbody=document.getElementById("playerTable");
 
-    players[index].current = Number(newKills);
+tbody.innerHTML="";
 
-    savePlayers();
-    renderPlayers();
+players.sort((a,b)=>gain(b)-gain(a));
+
+players.forEach((player,index)=>{
+
+tbody.innerHTML+=`
+
+<tr>
+
+<td>${index+1}</td>
+
+<td>${player.name}</td>
+
+<td>${player.startKills.toLocaleString()}</td>
+
+<td>${player.currentKills.toLocaleString()}</td>
+
+<td style="color:#ff4444;font-weight:bold">
+
++${gain(player).toLocaleString()}
+
+</td>
+
+<td>
+
+<button onclick="editPlayer(${index})">
+
+Modifier
+
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
 }
 
-function deletePlayer(index) {
-    if (confirm("Supprimer ce joueur ?")) {
-        players.splice(index, 1);
+function editPlayer(index){
 
-        savePlayers();
-        renderPlayers();
-    }
+let valeur=prompt(
+
+"Nouveau total de kills",
+
+players[index].currentKills
+
+);
+
+if(valeur===null)return;
+
+players[index].currentKills=parseInt(valeur);
+
+savePlayers();
+
+renderPlayers();
+
 }
 
-window.onload = renderPlayers;
+window.onload=renderPlayers;
