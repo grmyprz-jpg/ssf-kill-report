@@ -1,140 +1,121 @@
 // ======================================
-// SSF Kill Tracker v1.0
+// SSF Kill Tracker v2.0
 // ======================================
 
-let players = JSON.parse(localStorage.getItem("ssf_players"));
+let players = [];
 
-if (!players) {
+// Charger les joueurs
+async function loadPlayers() {
 
-players = [
+    const saved = localStorage.getItem("ssf_players");
 
-{
-name:"NoHereSmall",
-startKills:0,
-currentKills:0
-},
+    if (saved) {
 
-{
-name:"Alpharius XX",
-startKills:0,
-currentKills:0
-},
+        players = JSON.parse(saved);
 
-{
-name:"Stark58000",
-startKills:0,
-currentKills:0
-},
+    } else {
 
-{
-name:"Sweet Melora",
-startKills:0,
-currentKills:0
-},
+        const response = await fetch("joueurs.json");
+        const data = await response.json();
 
-{
-name:"sir mojo",
-startKills:0,
-currentKills:0
-},
+        players = data.joueurs.map(joueur => ({
+            name: joueur.nom,
+            startKills: joueur.kills,
+            currentKills: joueur.kills
+        }));
 
-{
-name:"Darkssade",
-startKills:0,
-currentKills:0
-},
+        savePlayers();
+    }
 
-{
-name:"El Sirocco",
-startKills:0,
-currentKills:0
-},
+    renderPlayers();
+}
 
-{
-name:"Rp88",
-startKills:0,
-currentKills:0
-},
+// Sauvegarder
+function savePlayers() {
+    localStorage.setItem("ssf_players", JSON.stringify(players));
+}
 
-// Les autres joueurs seront ajoutés ici
-];
+// Calcul du gain
+function gain(player) {
+    return player.currentKills - player.startKills;
+}
 
-savePlayers();
+// Affichage
+function renderPlayers() {
+
+    const tbody = document.getElementById("playerTable");
+
+    tbody.innerHTML = "";
+
+    players.sort((a, b) => gain(b) - gain(a));
+
+    players.forEach((player, index) => {
+
+        tbody.innerHTML += `
+        <tr>
+            <td>${index + 1}</td>
+
+            <td>${player.name}</td>
+
+            <td>${player.startKills.toLocaleString()}</td>
+
+            <td>${player.currentKills.toLocaleString()}</td>
+
+            <td style="color:#ff4444;font-weight:bold">
+                +${gain(player).toLocaleString()}
+            </td>
+
+            <td>
+                <button onclick="editPlayer(${index})">
+                    Modifier
+                </button>
+            </td>
+        </tr>
+        `;
+
+    });
 
 }
 
-function savePlayers(){
-localStorage.setItem("ssf_players",JSON.stringify(players));
-}
+// Modifier les kills
+function editPlayer(index) {
 
-function gain(player){
-return player.currentKills-player.startKills;
-}
+    let valeur = prompt(
+        "Nouveau total de kills",
+        players[index].currentKills
+    );
 
-function renderPlayers(){
+    if (valeur === null) return;
 
-const tbody=document.getElementById("playerTable");
+    valeur = valeur.replace(/\s/g, "");
 
-tbody.innerHTML="";
+    if (isNaN(valeur)) {
+        alert("Veuillez entrer un nombre.");
+        return;
+    }
 
-players.sort((a,b)=>gain(b)-gain(a));
+    players[index].currentKills = parseInt(valeur);
 
-players.forEach((player,index)=>{
+    savePlayers();
 
-tbody.innerHTML+=`
-
-<tr>
-
-<td>${index+1}</td>
-
-<td>${player.name}</td>
-
-<td>${player.startKills.toLocaleString()}</td>
-
-<td>${player.currentKills.toLocaleString()}</td>
-
-<td style="color:#ff4444;font-weight:bold">
-
-+${gain(player).toLocaleString()}
-
-</td>
-
-<td>
-
-<button onclick="editPlayer(${index})">
-
-Modifier
-
-</button>
-
-</td>
-
-</tr>
-
-`;
-
-});
+    renderPlayers();
 
 }
 
-function editPlayer(index){
+// Réinitialiser les gains
+function resetWeek() {
 
-let valeur=prompt(
+    if (!confirm("Réinitialiser les gains de tous les joueurs ?"))
+        return;
 
-"Nouveau total de kills",
+    players.forEach(player => {
+        player.startKills = player.currentKills;
+    });
 
-players[index].currentKills
+    savePlayers();
 
-);
-
-if(valeur===null)return;
-
-players[index].currentKills=parseInt(valeur);
-
-savePlayers();
-
-renderPlayers();
+    renderPlayers();
 
 }
 
-window.onload=renderPlayers;
+window.onload = loadPlayers;
