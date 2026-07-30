@@ -2,65 +2,110 @@ let players = [];
 
 async function loadPlayers() {
     try {
-        const response = await fetch("joueurs.json");
-        const data = await response.json();
+        const saved = localStorage.getItem("ssf_players");
 
-        players = data.joueurs.map(joueur => ({
-            name: joueur.nom,
-            startKills: joueur.kills,
-            currentKills: joueur.kills
-        }));
+        if (saved) {
+            players = JSON.parse(saved);
+        } else {
+            const response = await fetch("./joueurs.json");
+
+            if (!response.ok) {
+                throw new Error("Impossible de charger joueurs.json");
+            }
+
+            const data = await response.json();
+
+            players = data.joueurs.map(j => ({
+                nom: j.nom,
+                startKills: j.kills,
+                currentKills: j.kills
+            }));
+
+            savePlayers();
+        }
 
         renderPlayers();
 
-    } catch (error) {
-        alert("Erreur lors du chargement de joueurs.json");
-        console.error(error);
+    } catch (e) {
+        alert(e.message);
+        console.error(e);
     }
 }
 
 function renderPlayers() {
+
     const tbody = document.getElementById("joueurs");
     tbody.innerHTML = "";
 
     players.forEach((player, index) => {
+
         const tr = document.createElement("tr");
 
         tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${player.name}</td>
-            <td>${player.startKills}</td>
-            <td>${player.currentKills}</td>
-            <td>${player.currentKills - player.startKills}</td>
-            <td><button onclick="editPlayer(${index})">Modifier</button></td>
+            <td>${player.nom}</td>
+
+            <td>${player.startKills.toLocaleString("fr-FR")}</td>
+
+            <td>
+                <input
+                    type="number"
+                    value="${player.currentKills}"
+                    onchange="updateKills(${index}, this.value)">
+            </td>
         `;
 
         tbody.appendChild(tr);
+
     });
+
 }
 
-function editPlayer(index) {
-    const valeur = prompt("Nouveau nombre de kills :", players[index].currentKills);
+function updateKills(index, value) {
 
-    if (valeur === null) return;
+    value = parseInt(value);
 
-    const nombre = parseInt(valeur, 10);
+    if (isNaN(value)) value = 0;
 
-    if (isNaN(nombre)) {
-        alert("Veuillez entrer un nombre valide.");
-        return;
-    }
+    players[index].currentKills = value;
 
-    players[index].currentKills = nombre;
-    renderPlayers();
+    savePlayers();
+
+}
+
+function savePlayers() {
+
+    localStorage.setItem(
+        "ssf_players",
+        JSON.stringify(players)
+    );
+
 }
 
 function resetWeek() {
+
+    if (!confirm("Réinitialiser la semaine ?"))
+        return;
+
     players.forEach(player => {
+
         player.startKills = player.currentKills;
+
     });
 
+    savePlayers();
+
     renderPlayers();
+
 }
+
+document.getElementById("saveBtn").addEventListener("click", () => {
+
+    savePlayers();
+
+    alert("Sauvegarde effectuée.");
+
+});
+
+document.getElementById("resetBtn").addEventListener("click", resetWeek);
 
 window.onload = loadPlayers;
