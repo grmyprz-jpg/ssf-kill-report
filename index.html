@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,13 +7,17 @@
 
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+
+<div class="container">
 
     <h1>⚔️ SSF Kill Tracker ⚔️</h1>
 
-    <table id="killTable">
+    <button class="reset-btn" onclick="resetWeek()">
+        🔄 Réinitialiser la semaine
+    </button>
 
+    <table>
         <thead>
             <tr>
                 <th>#</th>
@@ -31,14 +34,9 @@
 
     </table>
 
-    <br>
+</div>
 
-    <button onclick="resetWeek()">
-        🔄 Réinitialiser la semaine
-    </button>
-
-    <script src="script.js"></script>
+<script src="script.js"></script>
 
 </body>
-
 </html>
