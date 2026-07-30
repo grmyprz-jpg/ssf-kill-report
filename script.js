@@ -1,7 +1,7 @@
 // ======================================
 // SSF Kill Tracker v2.0
 // ======================================
-
+localStorage.removeItem("ssf_players");
 let players = [];
 
 // Charger les joueurs
