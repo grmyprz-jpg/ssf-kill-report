@@ -1,42 +1,54 @@
 <!DOCTYPE html>
-<html lang="eng">
+<html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSF Kill Tracker</title>
+    <title>SSF Kill Tracker V1</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="container">
+    <div class="container">
 
-    <h1>⚔️ SSF Kill Tracker ⚔️</h1>
+        <h1>⚔️ SSF Kill Tracker ⚔️</h1>
 
-    <button class="reset-btn" onclick="resetWeek()">
-        🔄 Réinitialiser la semaine
-    </button>
+        <p class="subtitle">
+            Version 1.0
+        </p>
 
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Joueur</th>
-                <th>Kills départ</th>
-                <th>Kills actuels</th>
-                <th>Gain</th>
-                <th>Action</th>
-            </tr>
-        </thead>
+        <button id="saveBtn">
+            💾 Sauvegarder
+        </button>
 
-        <tbody id="joueurs">
-        </tbody>
+        <button id="resetBtn">
+            🔄 Réinitialiser la semaine
+        </button>
 
-    </table>
+        <table>
 
-</div>
+            <thead>
 
-<script src="script.js"></script>
+                <tr>
+                    <th>Joueur</th>
+                    <th>Kills départ</th>
+                    <th>Kills actuels</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="joueurs">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <script src="script.js"></script>
 
 </body>
+
 </html>
