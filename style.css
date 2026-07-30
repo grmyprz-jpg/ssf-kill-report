@@ -1,95 +1,96 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
 }
 
-body {
-    background: #111;
-    color: white;
-    font-family: Arial, Helvetica, sans-serif;
+body{
+    background:#111;
+    color:#fff;
+    padding:15px;
 }
 
-.container {
-    width: 95%;
-    max-width: 1200px;
-    margin: auto;
-    padding: 20px;
+.container{
+    max-width:900px;
+    margin:auto;
 }
 
-h1 {
-    text-align: center;
-    color: #ff2d2d;
-    margin-bottom: 20px;
+h1{
+    text-align:center;
+    color:#ff3333;
+    margin-bottom:5px;
 }
 
-.reset-btn {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 20px;
-    background: #cc0000;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
+.subtitle{
+    text-align:center;
+    color:#bbb;
+    margin-bottom:20px;
 }
 
-.reset-btn:hover {
-    background: #ff0000;
+button{
+    width:100%;
+    padding:12px;
+    margin-bottom:10px;
+    border:none;
+    border-radius:8px;
+    background:#c00000;
+    color:#fff;
+    font-size:16px;
+    cursor:pointer;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #1b1b1b;
+button:hover{
+    background:#ff3333;
 }
 
-th {
-    background: #990000;
-    color: white;
-    padding: 10px;
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#1d1d1d;
 }
 
-td {
-    padding: 10px;
-    text-align: center;
-    border-bottom: 1px solid #333;
+th{
+    background:#8b0000;
+    color:#fff;
+    padding:10px;
 }
 
-tr:hover {
-    background: #292929;
+td{
+    padding:8px;
+    border-bottom:1px solid #333;
+    text-align:center;
 }
 
-button {
-    background: #ff2d2d;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 6px 10px;
-    cursor: pointer;
+input{
+    width:100%;
+    padding:6px;
+    border:1px solid #555;
+    border-radius:5px;
+    background:#222;
+    color:#fff;
+    text-align:center;
 }
 
-button:hover {
-    background: #ff5555;
+tr:nth-child(even){
+    background:#181818;
 }
 
-@media (max-width: 768px) {
-    table {
-        font-size: 12px;
+@media(max-width:700px){
+
+    body{
+        padding:8px;
     }
 
-    td,
-    th {
-        padding: 6px;
+    table{
+        font-size:12px;
     }
 
-    button {
-        font-size: 11px;
-        padding: 5px 8px;
+    th,td{
+        padding:6px;
     }
 
-    h1 {
-        font-size: 22px;
+    button{
+        font-size:14px;
     }
 }
