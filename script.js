@@ -7,11 +7,11 @@ let players = [];
 // Charger les joueurs
 async function loadPlayers() {
 
-    const saved = localStorage.getItem("ssf_players");
+    const savedPlayers = localStorage.getItem("ssf_players");
 
-    if (saved) {
+    if (savedPlayers) {
 
-        players = JSON.parse(saved);
+        players = JSON.parse(savedPlayers);
 
     } else {
 
@@ -35,15 +35,15 @@ function savePlayers() {
     localStorage.setItem("ssf_players", JSON.stringify(players));
 }
 
-// Calcul du gain
+// Calcul des gains
 function gain(player) {
     return player.currentKills - player.startKills;
 }
 
-// Affichage
+// Affichage du tableau
 function renderPlayers() {
 
-    const tbody = document.getElementById("playerTable");
+    const tbody = document.getElementById("joueurs");
 
     tbody.innerHTML = "";
 
@@ -54,17 +54,12 @@ function renderPlayers() {
         tbody.innerHTML += `
         <tr>
             <td>${index + 1}</td>
-
             <td>${player.name}</td>
-
             <td>${player.startKills.toLocaleString()}</td>
-
             <td>${player.currentKills.toLocaleString()}</td>
-
-            <td style="color:#ff4444;font-weight:bold">
+            <td style="color:#ff4444;font-weight:bold;">
                 +${gain(player).toLocaleString()}
             </td>
-
             <td>
                 <button onclick="editPlayer(${index})">
                     Modifier
@@ -72,16 +67,14 @@ function renderPlayers() {
             </td>
         </tr>
         `;
-
     });
-
 }
 
 // Modifier les kills
 function editPlayer(index) {
 
     let valeur = prompt(
-        "Nouveau total de kills",
+        "Nouveau total de kills :",
         players[index].currentKills
     );
 
@@ -89,8 +82,8 @@ function editPlayer(index) {
 
     valeur = valeur.replace(/\s/g, "");
 
-    if (isNaN(valeur)) {
-        alert("Veuillez entrer un nombre.");
+    if (isNaN(valeur) || valeur === "") {
+        alert("Veuillez entrer un nombre valide.");
         return;
     }
 
@@ -99,13 +92,12 @@ function editPlayer(index) {
     savePlayers();
 
     renderPlayers();
-
 }
 
 // Réinitialiser les gains
 function resetWeek() {
 
-    if (!confirm("Réinitialiser les gains de tous les joueurs ?"))
+    if (!confirm("Réinitialiser les kills de départ pour tous les joueurs ?"))
         return;
 
     players.forEach(player => {
@@ -115,7 +107,7 @@ function resetWeek() {
     savePlayers();
 
     renderPlayers();
-
 }
 
+// Lancer l'application
 window.onload = loadPlayers;
