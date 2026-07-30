@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSF Kill Tracker V1</title>
+    <title>SSF Kill Report</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -13,37 +13,72 @@
 
     <div class="container">
 
-        <h1>⚔️ SSF Kill Tracker ⚔️</h1>
+        <h1>⚔️ SSF Kill Report ⚔️</h1>
 
-        <p class="subtitle">
-            Version 1.0
-        </p>
+        <div class="actions">
 
-        <button id="saveBtn">
-            💾 Sauvegarder
-        </button>
+            <button id="addPlayerBtn">➕ Ajouter un joueur</button>
 
-        <button id="resetBtn">
-            🔄 Réinitialiser la semaine
-        </button>
+            <button id="saveBtn">💾 Sauvegarder</button>
 
-        <table>
+            <button id="resetBtn">🔄 Nouvelle semaine</button>
 
-            <thead>
+            <button id="exportBtn">📄 Export CSV</button>
 
-                <tr>
-                    <th>Joueur</th>
-                    <th>Kills départ</th>
-                    <th>Kills actuels</th>
-                </tr>
+        </div>
 
-            </thead>
+        <div class="searchBox">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="🔍 Rechercher un joueur...">
+        </div>
 
-            <tbody id="joueurs">
+        <div class="stats">
 
-            </tbody>
+            <div class="card">
+                <h3>👥 Joueurs</h3>
+                <p id="playerCount">0</p>
+            </div>
 
-        </table>
+            <div class="card">
+                <h3>⚔️ Kills gagnés</h3>
+                <p id="guildKills">0</p>
+            </div>
+
+        </div>
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>#</th>
+
+                        <th>Joueur</th>
+
+                        <th>Départ</th>
+
+                        <th>Actuel</th>
+
+                        <th>Gain</th>
+
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="joueurs">
+
+                </tbody>
+
+            </table>
+
+        </div>
 
     </div>
 
