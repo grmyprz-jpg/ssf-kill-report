@@ -1,32 +1,44 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SSF Kill Report</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSF Kill Tracker</title>
+
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<h1>⚔️ SSF Kill Report ⚔️</h1>
+    <h1>⚔️ SSF Kill Tracker ⚔️</h1>
 
-<table id="killTable">
-<thead>
-<tr>
-<th>Rang</th>
-<th>Joueur</th>
-<th>Kills</th>
-<th>Actions</th>
-</tr>
-</thead>
+    <table id="killTable">
 
-<tbody id="players">
-</tbody>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Joueur</th>
+                <th>Kills départ</th>
+                <th>Kills actuels</th>
+                <th>Gain</th>
+                <th>Action</th>
+            </tr>
+        </thead>
 
-</table>
+        <tbody id="joueurs">
+        </tbody>
 
-<script src="script.js"></script>
+    </table>
+
+    <br>
+
+    <button onclick="resetWeek()">
+        🔄 Réinitialiser la semaine
+    </button>
+
+    <script src="script.js"></script>
 
 </body>
+
 </html>
