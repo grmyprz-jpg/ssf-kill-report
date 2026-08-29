@@ -1,0 +1,7 @@
+{
+  "name": "Registre de Guilde",
+  "short_name": "Guilde",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0e1420",
+  "theme_color": "#0e1420"
