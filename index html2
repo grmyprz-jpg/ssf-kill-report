@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0e1420">
+<link rel="manifest" href="manifest.json">
+<title>Registre de Guilde</title>
+<style>
+  :root{
+    --bg:#0e1420;
+    --panel:#151d2e;
+    --panel-2:#1b2740;
+    --line:#26314a;
+    --text:#e7ecf5;
+    --muted:#8b9ab3;
+    --accent:#4fd1c5;
+    --danger:#e2564f;
+    --gold:#e0b04e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #16233b 0%, transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    padding:20px;
+    min-height:100vh;
+  }
+  .wrap{max-width:1100px;margin:0 auto;}
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:20px;
+    padding-bottom:16px;
+    border-bottom:1px solid var(--line);
+  }
+  h1{font-size:1.4rem;margin:0;letter-spacing:0.5px;font-weight:700;}
+  h1 span{color:var(--accent);}
+  .stats{display:flex;gap:20px;font-size:0.85rem;color:var(--muted);flex-wrap:wrap;}
+  .stats b{color:var(--text);font-size:1rem;display:block;font-variant-numeric:tabular-nums;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+  input[type=text]{
+    background:var(--panel);border:1px solid var(--line);color:var(--text);
+    padding:9px 12px;border-radius:8px;font-size:0.9rem;outline:none;flex:1;min-width:180px;
+  }
+  input[type=text]:focus{border-color:var(--accent);}
+  button{
+    background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    padding:9px 14px;border-radius:8px;font-size:0.85rem;cursor:pointer;
+  }
+  button:hover{border-color:var(--accent);color:var(--accent);}
+  .weekbar{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:12px 16px;margin-bottom:16px;
+  }
+  .weekbar .label{color:var(--muted);font-size:0.82rem;}
+  .weekbar .value{color:var(--text);font-weight:600;}
+  table{width:100%;min-width:560px;border-collapse:collapse;background:var(--panel);border-radius:10px;overflow:hidden;}
+  thead th{
+    text-align:left;padding:10px 12px;font-size:0.75rem;text-transform:uppercase;
+    letter-spacing:0.6px;color:var(--muted);background:var(--panel-2);white-space:nowrap;
+  }
+  tbody td{padding:9px 12px;border-top:1px solid var(--line);font-size:0.88rem;font-variant-numeric:tabular-nums;}
+  tbody tr:hover{background:rgba(79,209,197,0.05);}
+  td.num{text-align:right;}
+  td.rank{color:var(--muted);width:36px;}
+  td.name{font-weight:600;}
+  .missing{color:var(--gold);font-style:italic;font-size:0.8rem;}
+  .diff-pos{color:var(--accent);font-weight:700;}
+  .diff-warn{color:var(--gold);font-weight:700;}
+  .diff-neg{color:var(--danger);}
+  .empty{padding:30px;text-align:center;color:var(--muted);}
+  .status{font-size:0.75rem;color:var(--muted);text-align:center;margin-top:14px;}
+  .status.live::before{content:"● ";color:var(--accent);}
+  .status.offline::before{content:"● ";color:var(--danger);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Registre de <span>Guilde</span></h1>
+    <div class="stats">
+      <div>Joueurs<b id="statCount">–</b></div>
+      <div>Puissance totale<b id="statPower">–</b></div>
+      <div>Troupes tuées (total)<b id="statKills">–</b></div>
+      <div>Sous l'objectif<b id="statUnder">–</b></div>
+    </div>
+  </header>
+
+  <div class="weekbar">
+    <span class="label">Semaine en cours depuis :</span>
+    <span class="value" id="weekDate">–</span>
+    <span class="label">· Objectif hebdo :</span>
+    <span class="value">1 000 000 kills</span>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Rechercher un joueur...">
+    <button id="sortName">Trier A-Z</button>
+    <button id="sortKills">Trier par kills</button>
+    <button id="sortDiff">Trier par écart</button>
+  </div>
+
+  <div style="overflow-x:auto;">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:36px;">#</th>
+        <th>Nom</th>
+        <th style="text-align:right;">Puissance</th>
+        <th style="text-align:right;">Troupes tuées</th>
+        <th style="text-align:right;">Début semaine</th>
+        <th style="text-align:right;">Kills cette semaine</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  </div>
+  <div id="emptyState" class="empty" style="display:none;">Aucun joueur trouvé.</div>
+  <div class="status" id="statusLine">Connexion...</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAfbmZtzxgvuHDMx_l7YmRhzMgYz8oWRY4",
+  authDomain: "ssf-compteur-kills.firebaseapp.com",
+  projectId: "ssf-compteur-kills",
+  storageBucket: "ssf-compteur-kills.firebasestorage.app",
+  messagingSenderId: "392045599936",
+  appId: "1:392045599936:web:2248fbb971fb84add6a125"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const docRef = db.collection('guilde').doc('data');
+
+const WEEKLY_TARGET = 1000000;
+let players = [];
+let weekStartDate = null;
+let sortMode = null;
+
+function diffOf(p){
+  if(p.kills === null || p.kills === undefined || p.prevKills === null || p.prevKills === undefined) return null;
+  return Number(p.kills) - Number(p.prevKills);
+}
+function fmt(n){
+  if(n === null || n === undefined || n === "") return null;
+  return Number(n).toLocaleString('fr-FR');
+}
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+docRef.onSnapshot((snap) => {
+  const data = snap.data();
+  if(data){
+    players = data.players || [];
+    weekStartDate = data.weekStartDate || null;
+    document.getElementById('statusLine').textContent = 'Connecté — mise à jour en temps réel';
+    document.getElementById('statusLine').className = 'status live';
+  } else {
+    document.getElementById('statusLine').textContent = 'Aucune donnée trouvée pour le moment';
+  }
+  render();
+}, (err) => {
+  document.getElementById('statusLine').textContent = 'Connexion impossible — vérifie ta connexion internet';
+  document.getElementById('statusLine').className = 'status offline';
+});
+
+function render(){
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let list = players.filter(p => p.name.toLowerCase().includes(q));
+
+  if(sortMode === 'name'){
+    list = [...list].sort((a,b)=> a.name.localeCompare(b.name));
+  } else if(sortMode === 'kills'){
+    list = [...list].sort((a,b)=> (b.kills||0) - (a.kills||0));
+  } else if(sortMode === 'diff'){
+    list = [...list].sort((a,b)=> (diffOf(b) ?? -Infinity) - (diffOf(a) ?? -Infinity));
+  }
+
+  const tbody = document.getElementById('tbody');
+  const emptyState = document.getElementById('emptyState');
+  tbody.innerHTML = '';
+  emptyState.style.display = list.length === 0 ? 'block' : 'none';
+
+  list.forEach((p, idx) => {
+    const tr = document.createElement('tr');
+    const d = diffOf(p);
+    let diffHtml;
+    if(d === null){ diffHtml = `<span class="missing">?</span>`; }
+    else {
+      const cls = d >= WEEKLY_TARGET ? 'diff-pos' : (d > 0 ? 'diff-warn' : 'diff-neg');
+      const sign = d > 0 ? '+' : '';
+      diffHtml = `<span class="${cls}">${sign}${fmt(d)}</span>`;
+    }
+    tr.innerHTML = `
+      <td class="rank">${idx+1}</td>
+      <td class="name">${escapeHtml(p.name)}</td>
+      <td class="num">${fmt(p.power) ?? '–'}</td>
+      <td class="num">${p.kills===null||p.kills===undefined ? '<span class="missing">?</span>' : fmt(p.kills)}</td>
+      <td class="num">${p.prevKills===null||p.prevKills===undefined ? '<span class="missing">?</span>' : fmt(p.prevKills)}</td>
+      <td class="num">${diffHtml}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('statCount').textContent = players.length;
+  const totalPower = players.reduce((s,p)=> s + (Number(p.power)||0), 0);
+  const totalKills = players.reduce((s,p)=> s + (Number(p.kills)||0), 0);
+  document.getElementById('statPower').textContent = fmt(totalPower);
+  document.getElementById('statKills').textContent = fmt(totalKills);
+  const underCount = players.filter(p => { const d=diffOf(p); return d!==null && d<WEEKLY_TARGET; }).length;
+  document.getElementById('statUnder').textContent = underCount;
+  document.getElementById('weekDate').textContent = weekStartDate || '–';
+}
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('sortName').addEventListener('click', () => { sortMode = sortMode==='name'?null:'name'; render(); });
+document.getElementById('sortKills').addEventListener('click', () => { sortMode = sortMode==='kills'?null:'kills'; render(); });
+document.getElementById('sortDiff').addEventListener('click', () => { sortMode = sortMode==='diff'?null:'diff'; render(); });
+</script>
+</body>
+</html>
