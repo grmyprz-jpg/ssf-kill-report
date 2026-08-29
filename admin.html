@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0e1420">
+<title>Registre de Guilde — Admin</title>
+<style>
+
+  :root{
+    --bg:#0e1420; --panel:#151d2e; --panel-2:#1b2740; --line:#26314a;
+    --text:#e7ecf5; --muted:#8b9ab3; --accent:#4fd1c5; --danger:#e2564f; --gold:#e0b04e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: radial-gradient(1200px 600px at 10% -10%, #16233b 0%, transparent 60%), var(--bg);
+    color:var(--text); font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    padding:20px; min-height:100vh;
+  }
+  .wrap{max-width:1100px;margin:0 auto;}
+  header{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line);}
+  h1{font-size:1.4rem;margin:0;letter-spacing:0.5px;font-weight:700;}
+  h1 span{color:var(--accent);}
+  .badge-admin{background:rgba(226,86,79,0.15);color:var(--danger);padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;margin-left:8px;vertical-align:middle;}
+  .stats{display:flex;gap:20px;font-size:0.85rem;color:var(--muted);flex-wrap:wrap;}
+  .stats b{color:var(--text);font-size:1rem;display:block;font-variant-numeric:tabular-nums;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+  input[type=text],input[type=number]{background:var(--panel);border:1px solid var(--line);color:var(--text);padding:9px 12px;border-radius:8px;font-size:0.9rem;outline:none;}
+  input[type=text]:focus,input[type=number]:focus{border-color:var(--accent);}
+  #search{flex:1;min-width:180px;}
+  button{background:var(--panel-2);border:1px solid var(--line);color:var(--text);padding:9px 14px;border-radius:8px;font-size:0.85rem;cursor:pointer;}
+  button:hover{border-color:var(--accent);color:var(--accent);}
+  button.primary{background:var(--accent);color:#0e1420;border-color:var(--accent);font-weight:600;}
+  button.primary:hover{opacity:0.9;color:#0e1420;}
+  button.ghost-danger:hover{border-color:var(--danger);color:var(--danger);}
+  .add-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;background:var(--panel);border:1px solid var(--line);padding:12px;border-radius:10px;}
+  .add-row input{flex:1;min-width:120px;}
+  table{width:100%;min-width:640px;border-collapse:collapse;background:var(--panel);border-radius:10px;overflow:hidden;}
+  thead th{text-align:left;padding:10px 12px;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);background:var(--panel-2);white-space:nowrap;}
+  tbody td{padding:9px 12px;border-top:1px solid var(--line);font-size:0.88rem;font-variant-numeric:tabular-nums;}
+  tbody tr:hover{background:rgba(79,209,197,0.05);}
+  td.num{text-align:right;}
+  td.rank{color:var(--muted);width:36px;}
+  .editable{background:transparent;border:1px solid transparent;color:var(--text);width:100%;text-align:right;padding:4px 6px;border-radius:6px;font-variant-numeric:tabular-nums;}
+  .editable.name{min-width:140px;white-space:nowrap;text-align:left;font-weight:600;}
+  .editable:focus{border-color:var(--accent);background:var(--panel-2);}
+  .del{color:var(--muted);background:transparent;border:none;font-size:1rem;padding:2px 8px;}
+  .del:hover{color:var(--danger);}
+  .missing{color:var(--gold);font-style:italic;font-size:0.8rem;}
+  .diff-pos{color:var(--accent);font-weight:700;}
+  .diff-warn{color:var(--gold);font-weight:700;}
+  .diff-neg{color:var(--danger);}
+  .hint{color:var(--muted);font-size:0.78rem;margin:-6px 0 14px 2px;}
+  .weekbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:16px;}
+  .weekbar .label{color:var(--muted);font-size:0.82rem;}
+  .weekbar .value{color:var(--text);font-weight:600;}
+  .empty{padding:30px;text-align:center;color:var(--muted);}
+  .status{font-size:0.75rem;color:var(--muted);text-align:center;margin-top:14px;}
+  .status.live::before{content:"● ";color:var(--accent);}
+  .status.offline::before{content:"● ";color:var(--danger);}
+  #gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:999;}
+  #gate input{padding:12px 16px;font-size:1rem;width:240px;text-align:center;}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <h2>Accès admin</h2>
+  <input type="text" id="gatePassword" placeholder="Mot de passe" autocomplete="off">
+  <button class="primary" id="gateSubmit">Entrer</button>
+  <div class="hint" id="gateError" style="color:var(--danger);"></div>
+</div>
+
+<div class="wrap" id="app" style="display:none;">
+  <header>
+    <h1>Registre de <span>Guilde</span><span class="badge-admin">ADMIN</span></h1>
+    <div class="stats">
+      <div>Joueurs<b id="statCount">–</b></div>
+      <div>Puissance totale<b id="statPower">–</b></div>
+      <div>Troupes tuées (total)<b id="statKills">–</b></div>
+      <div>Sous l'objectif<b id="statUnder">–</b></div>
+    </div>
+  </header>
+
+  <div class="weekbar">
+    <span class="label">Semaine en cours depuis :</span>
+    <span class="value" id="weekDate">–</span>
+    <span class="label">· Objectif hebdo :</span>
+    <span class="value">1 000 000 kills</span>
+    <button id="snapshot" class="primary" style="margin-left:auto;">🗓️ Démarrer une nouvelle semaine</button>
+  </div>
+  <div class="hint">« Nouvelle semaine » enregistre les troupes tuées actuelles comme point de départ.</div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Rechercher un joueur...">
+    <button id="sortName">Trier A-Z</button>
+    <button id="sortKills">Trier par kills</button>
+    <button id="sortDiff">Trier par écart</button>
+    <button id="exportCsv">Exporter CSV</button>
+    <button id="importCsvBtn">Importer CSV</button>
+    <input type="file" id="importCsvInput" accept=".csv" style="display:none;">
+    <button id="resetData" class="ghost-danger">Réinitialiser</button>
+  </div>
+
+  <div class="add-row">
+    <input type="text" id="newName" placeholder="Nom du joueur">
+    <input type="number" id="newPower" placeholder="Puissance">
+    <input type="number" id="newKills" placeholder="Troupes tuées">
+    <button class="primary" id="addPlayer">+ Ajouter</button>
+  </div>
+
+  <div style="overflow-x:auto;">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:36px;">#</th>
+        <th>Nom</th>
+        <th style="text-align:right;">Puissance</th>
+        <th style="text-align:right;">Troupes tuées</th>
+        <th style="text-align:right;">Début semaine</th>
+        <th style="text-align:right;">Kills cette semaine</th>
+        <th style="width:40px;"></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  </div>
+  <div id="emptyState" class="empty" style="display:none;">Aucun joueur trouvé.</div>
+  <div class="status" id="statusLine">Connexion...</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+
+const ADMIN_PASSWORD = "/LMcompteurkills";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAfbmZtzxgvuHDMx_l7YmRhzMgYz8oWRY4",
+  authDomain: "ssf-compteur-kills.firebaseapp.com",
+  projectId: "ssf-compteur-kills",
+  storageBucket: "ssf-compteur-kills.firebasestorage.app",
+  messagingSenderId: "392045599936",
+  appId: "1:392045599936:web:2248fbb971fb84add6a125"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const docRef = db.collection('guilde').doc('data');
+
+const WEEKLY_TARGET = 1000000;
+let players = [];
+let weekStartDate = null;
+let sortMode = null;
+let loadedOnce = false;
+
+const seedData = [
+["WARMAXXIX",3988199896,2747073416,2733118273],
+["YesHereSmall",3335327759,480146230,479264122],
+["Alpharius XX",3257424722,198143030,194799433],
+["Stark58000",3242114583,566863677,566853752],
+["Sweet Melora",2937876277,1088564321,1085510920],
+["Darkssade",2776963399,184049114,180746128],
+["sir mojo",2767627400,456775790,453468548],
+["El Sirocco",2709332057,100431490,100431176],
+["Rp88",2623880761,679297389,679279825],
+["Boulbi88",2576768867,933206441,932995847],
+["tutty74",2557571044,71455472,71455472],
+["Diesel Yc",2535236515,875543500,875015077],
+["badro hdey",2532755452,282541733,279397147],
+["YELLOW STONE",2522367694,1348726309,1348185874],
+["WA Albator",2422347872,520908755,520773259],
+["Cyril1er",2417445561,682309435,682205819],
+["TOMY SHELBY",2410121127,5153556086,5129912786],
+["Groot G.",2391709519,490672913,488403955],
+["Gradou",2379583557,1017956556,1017527400],
+["phoenix nite",2371611739,2233875545,2225642598],
+["Kuryakyn",2371361678,250268103,244860998],
+["Politichien",2367410327,1322474259,1319405950],
+["AZIZ019",2366956378,174183130,172982565],
+["huntour",2366896876,325920800,324941249],
+["MarquisDeSad",2356837187,509810691,null],
+["SuperToast",2345605763,124962714,108480276],
+["sam dz",2333137340,153146847,153114994],
+["beertof",2329827470,604721548,593153855],
+["Rigel ll",2321127850,747598035,745583854],
+["looping fou",2308837433,1939569886,1936681920],
+["OroSkO",2280295361,3979470980,3970259462],
+["ll Pikxchu",2279053616,1216126223,1215580375],
+["mat07",2275390756,2024642145,2018885100],
+["Gregkronk",2273176397,624460738,614642840],
+["Loooooks",2267539886,637038037,634116974],
+["bigterreur",2263505257,1041527979,1015289672],
+["YodaPrime",2239087064,1263323275,1255256985],
+["Micka 38",2230985156,802001387,799305333],
+["1PalestineDZ",2229394074,125794960,124204093],
+["tom lindo",2219604035,284784893,284784893],
+["Viking Z",2204921004,155895784,155703219],
+["Evil DtZ",2202998911,2173446778,2166416365],
+["xARES95x",2177890348,503845030,503396700],
+["Senpai Mk",2145113257,565079582,564886620],
+["mb14fb",2135251046,73413549,70423194],
+["FOX64000",2131274643,94004983,92102141],
+["Xx Sarou xX",2118691485,488556216,487417064],
+["Simoes",2103247235,1448653323,1440742005],
+["PerEtYo",2097535769,748848552,747706778],
+["Martyre 2",2078606521,395310753,390836946],
+["M3li0das66",2071866080,4209375600,4138789136],
+["Colonel JO",2055403502,775191379,771585102],
+["Kaylans",2054039026,335667156,332214560],
+["BOB 31",2043158449,984950392,984064603],
+["L indien",2029146819,57075945,56360536],
+["Ybouh",2027620156,2408704846,2401523783],
+["Amazone687",2025485246,529917410,529917392],
+["lFFlOroKriS",2019617914,1745467392,1745199606],
+["Night Darki",2008359176,507985843,504003455],
+["xXbeermanXx",1992023662,392159278,390596156],
+["RW Aiko",1988099811,482151150,479338153],
+["Kravounette",1979643241,1932421897,1931395684],
+["habibou",1966162498,445777982,445459178],
+["Thematt68",1965239946,453093390,450268442],
+["Uzytoad",1964947269,728923086,728923086],
+["Fafabilou",1959271918,141825892,141804282],
+["RW FAUCHEUR",1954760031,1081071701,1055801217],
+["Choupie17",1953501677,1757356761,1748332322],
+["xX Yoro Xx",1947011710,596148378,591676378],
+["StelS1",1924024540,373221642,368390681],
+["COBRA 29",1911430483,1109440167,1104425249],
+["Aek 31",1909376293,248145543,247421426],
+["LittleFroggy",1908705374,105150269,103306187],
+["Thorund",1899164812,230934547,230243886],
+["DontAttack10",1865962299,4491710035,4491710035],
+["Cissou",1857231431,1145635313,1140066072],
+["Albator69",1849891557,173159277,168513355],
+["PSG Girl",1845750336,352761580,345215106],
+["cricri06",1840106998,590567692,590013688],
+["KRAVEN",1826460784,5714466453,5699412208],
+["Schtroupmf",1818099469,315640103,311412765],
+["dghhfcgh",1793635399,432264981,423965082],
+["Im T4STY FF",1780026397,1119338420,1119338420],
+["Chris 24",1734211685,2475891613,2472462582],
+["grippessou",1713250468,515476079,511256390],
+["XxBastosxX",1713172406,143448235,141028386],
+["Nymeryia",1708152633,286300013,276022633],
+["KL DOBERMANN",1707066687,631124282,627389386],
+["DansTonFion",1665793124,596454696,590371631],
+["Maghribyaa",1623652442,218149282,217072065],
+["Fear Bzh",1609850895,333565251,328958475],
+["Rahan fdc",1608452504,839477443,833888445],
+["Le ruff",1601786031,436400894,430410903],
+["grimiski",1544050073,858435728,850038726],
+["Chardros",1531425879,1470153348,1470153348],
+["Hyperion RvG",1492011290,170790001,162838024],
+["Krighan",1486318596,158338267,154215358],
+["XxmarginalxX",1338512542,808411324,801988284],
+["Pitiv",1274628476,612751714,610413618]
+].map(([name, power, kills, prevKills], i) => ({ id: "p"+i, name, power, kills, prevKills }));
+
+function diffOf(p){
+  if(p.kills === null || p.kills === undefined || p.prevKills === null || p.prevKills === undefined) return null;
+  return Number(p.kills) - Number(p.prevKills);
+}
+function fmt(n){
+  if(n === null || n === undefined || n === "") return null;
+  return Number(n).toLocaleString('fr-FR');
+}
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function saveData(){
+  try{
+    await docRef.set({ players, weekStartDate }, { merge: true });
+  }catch(e){
+    console.error("Erreur de sauvegarde Firestore", e);
+    alert("Erreur de sauvegarde : " + e.message);
+  }
+}
+
+function startListening(){
+  docRef.onSnapshot((snap) => {
+    const data = snap.data();
+    if(data && data.players){
+      players = data.players;
+      weekStartDate = data.weekStartDate || null;
+      document.getElementById('statusLine').textContent = 'Connecté — synchronisé en temps réel';
+      document.getElementById('statusLine').className = 'status live';
+    } else if(!loadedOnce){
+      players = seedData.map(p => ({...p}));
+      weekStartDate = new Date().toLocaleDateString('fr-FR');
+      saveData();
+    }
+    loadedOnce = true;
+    render();
+  }, (err) => {
+    document.getElementById('statusLine').textContent = 'Connexion impossible';
+    document.getElementById('statusLine').className = 'status offline';
+  });
+}
+
+function render(){
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let list = players.filter(p => p.name.toLowerCase().includes(q));
+
+  if(sortMode === 'name'){ list = [...list].sort((a,b)=> a.name.localeCompare(b.name)); }
+  else if(sortMode === 'kills'){ list = [...list].sort((a,b)=> (b.kills||0) - (a.kills||0)); }
+  else if(sortMode === 'diff'){ list = [...list].sort((a,b)=> (diffOf(b) ?? -Infinity) - (diffOf(a) ?? -Infinity)); }
+
+  const tbody = document.getElementById('tbody');
+  const emptyState = document.getElementById('emptyState');
+  tbody.innerHTML = '';
+  emptyState.style.display = list.length === 0 ? 'block' : 'none';
+
+  list.forEach((p, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="rank">${idx+1}</td>
+      <td><input class="editable name" data-id="${p.id}" data-field="name" value="${escapeHtml(p.name)}"></td>
+      <td class="num"><input class="editable" type="number" data-id="${p.id}" data-field="power" value="${p.power ?? ''}"></td>
+      <td class="num">${p.kills === null || p.kills === undefined
+          ? `<input class="editable" type="number" placeholder="?" data-id="${p.id}" data-field="kills" value="">`
+          : `<input class="editable" type="number" data-id="${p.id}" data-field="kills" value="${p.kills}">`}
+      </td>
+      <td class="num">${p.prevKills === null || p.prevKills === undefined
+          ? `<input class="editable" type="number" placeholder="?" data-id="${p.id}" data-field="prevKills" value="">`
+          : `<input class="editable" type="number" data-id="${p.id}" data-field="prevKills" value="${p.prevKills}">`}
+      </td>
+      <td class="num">${(() => {
+          const d = diffOf(p);
+          if(d === null) return `<span class="missing">?</span>`;
+          let cls;
+          if(d >= WEEKLY_TARGET) cls = 'diff-pos';
+          else if(d > 0) cls = 'diff-warn';
+          else cls = 'diff-neg';
+          const sign = d > 0 ? '+' : '';
+          return `<span class="${cls}">${sign}${fmt(d)}</span>`;
+        })()}
+      </td>
+      <td><button class="del" data-id="${p.id}" title="Supprimer">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('statCount').textContent = players.length;
+  const totalPower = players.reduce((s,p)=> s + (Number(p.power)||0), 0);
+  const totalKills = players.reduce((s,p)=> s + (Number(p.kills)||0), 0);
+  document.getElementById('statPower').textContent = fmt(totalPower);
+  document.getElementById('statKills').textContent = fmt(totalKills);
+  const underCount = players.filter(p => { const d=diffOf(p); return d!==null && d<WEEKLY_TARGET; }).length;
+  document.getElementById('statUnder').textContent = underCount;
+  document.getElementById('weekDate').textContent = weekStartDate || '–';
+}
+
+document.getElementById('tbody').addEventListener('change', (e) => {
+  const el = e.target;
+  const id = el.dataset.id;
+  const field = el.dataset.field;
+  if(!id || !field) return;
+  const p = players.find(p => p.id === id);
+  if(!p) return;
+  if(field === 'name'){ p.name = el.value; }
+  else { p[field] = el.value === '' ? null : Number(el.value); }
+  saveData();
+});
+
+document.getElementById('tbody').addEventListener('click', (e) => {
+  if(e.target.classList.contains('del')){
+    const id = e.target.dataset.id;
+    players = players.filter(p => p.id !== id);
+    saveData();
+  }
+});
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('sortName').addEventListener('click', () => { sortMode = sortMode==='name'?null:'name'; render(); });
+document.getElementById('sortKills').addEventListener('click', () => { sortMode = sortMode==='kills'?null:'kills'; render(); });
+document.getElementById('sortDiff').addEventListener('click', () => { sortMode = sortMode==='diff'?null:'diff'; render(); });
+
+document.getElementById('addPlayer').addEventListener('click', () => {
+  const name = document.getElementById('newName').value.trim();
+  const power = document.getElementById('newPower').value;
+  const kills = document.getElementById('newKills').value;
+  if(!name) return;
+  players.push({ id: 'p' + Date.now(), name, power: power===''?null:Number(power), kills: kills===''?null:Number(kills), prevKills: kills===''?null:Number(kills) });
+  document.getElementById('newName').value = '';
+  document.getElementById('newPower').value = '';
+  document.getElementById('newKills').value = '';
+  saveData();
+});
+
+document.getElementById('exportCsv').addEventListener('click', () => {
+  let csv = 'Nom,Puissance,Troupes tuées,Début semaine,Kills cette semaine\n';
+  players.forEach(p => {
+    const d = diffOf(p);
+    csv += `"${(p.name||'').replace(/"/g,'""')}",${p.power ?? ''},${p.kills ?? ''},${p.prevKills ?? ''},${d ?? ''}\n`;
+  });
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'guilde_kills.csv'; a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('snapshot').addEventListener('click', async () => {
+  if(!confirm('Démarrer une nouvelle semaine ?')) return;
+  players.forEach(p => { p.prevKills = p.kills; });
+  weekStartDate = new Date().toLocaleDateString('fr-FR');
+  await saveData();
+});
+
+document.getElementById('resetData').addEventListener('click', async () => {
+  if(!confirm('Réinitialiser toutes les données avec la liste de base ?')) return;
+  players = seedData.map(p => ({...p}));
+  await saveData();
+});
+
+document.getElementById('importCsvBtn').addEventListener('click', () => {
+  document.getElementById('importCsvInput').click();
+});
+
+document.getElementById('importCsvInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const text = ev.target.result;
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if(lines.length < 2){ alert("Fichier CSV vide ou invalide."); return; }
+    const rows = lines.slice(1);
+    const parsed = [];
+    rows.forEach((line, i) => {
