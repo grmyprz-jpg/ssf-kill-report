@@ -143,9 +143,17 @@ const firebaseConfig = {
   messagingSenderId: "392045599936",
   appId: "1:392045599936:web:2248fbb971fb84add6a125"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const docRef = db.collection('guilde').doc('data');
+let db = null;
+let docRef = null;
+let firebaseInitError = null;
+try{
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  docRef = db.collection('guilde').doc('data');
+}catch(e){
+  firebaseInitError = e;
+  console.error("Erreur d'initialisation Firebase", e);
+}
 
 const WEEKLY_TARGET = 1000000;
 let players = [];
@@ -430,3 +438,44 @@ document.getElementById('importCsvInput').addEventListener('change', (e) => {
     const rows = lines.slice(1);
     const parsed = [];
     rows.forEach((line, i) => {
+      const m = line.match(/^"((?:[^"]|"")*)",(.*)$/);
+      let name, rest;
+      if(m){ name = m[1].replace(/""/g,'"'); rest = m[2]; }
+      else { const parts = line.split(','); name = parts[0]; rest = parts.slice(1).join(','); }
+      const cols = rest.split(',');
+      const toNum = (v) => (v === undefined || v === '') ? null : Number(v);
+      parsed.push({ id: 'p'+i, name: name, power: toNum(cols[0]), kills: toNum(cols[1]), prevKills: toNum(cols[2]) });
+    });
+    if(parsed.length === 0){ alert("Aucune ligne valide trouvée."); return; }
+    players = parsed;
+    saveData();
+    alert(`${parsed.length} joueurs importés.`);
+  };
+  reader.readAsText(file, 'utf-8');
+  e.target.value = '';
+});
+
+document.getElementById('gateSubmit').addEventListener('click', tryUnlock);
+document.getElementById('gatePassword').addEventListener('keydown', (e) => { if(e.key==='Enter') tryUnlock(); });
+function tryUnlock(){
+  if(typeof firebase === 'undefined'){
+    document.getElementById('gateError').textContent = "Erreur : Firebase n'a pas pu se charger (vérifie ta connexion internet ou réessaie).";
+    return;
+  }
+  if(firebaseInitError){
+    document.getElementById('gateError').textContent = "Erreur Firebase : " + firebaseInitError.message;
+    return;
+  }
+  const val = document.getElementById('gatePassword').value;
+  if(val === ADMIN_PASSWORD){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    startListening();
+  } else {
+    document.getElementById('gateError').textContent = 'Mot de passe incorrect';
+  }
+}
+
+</script>
+</body>
+</html>
