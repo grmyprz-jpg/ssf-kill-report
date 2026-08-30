@@ -424,4 +424,110 @@ document.getElementById('addPlayer').addEventListener('click', () => {
 });
 
 document.getElementById('exportCsv').addEventListener('click', () => {
-  let csv = 'Nom,Puissance,Troupes tuées,Début semaine,Kills ce
+  let csv = 'Nom,Puissance,Troupes tuées,Début semaine,Kills cette semaine,Référence jour,Kills aujourd\'hui\n';
+  players.forEach(p => {
+    const d = diffOf(p);
+    const dd = diffDayOf(p);
+    csv += `"${(p.name||'').replace(/"/g,'""')}",${p.power ?? ''},${p.kills ?? ''},${p.prevKills ?? ''},${d ?? ''},${p.prevDayKills ?? ''},${dd ?? ''}\n`;
+  });
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'guilde_kills.csv'; a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('snapshot').addEventListener('click', async () => {
+  if(!confirm('Démarrer une nouvelle semaine ?')) return;
+  players.forEach(p => { p.prevKills = p.kills; });
+  weekStartDate = new Date().toLocaleDateString('fr-FR');
+  await saveData();
+});
+
+document.getElementById('resetData').addEventListener('click', async () => {
+  if(!confirm('Réinitialiser toutes les données avec la liste de base ?')) return;
+  players = seedData.map(p => ({...p}));
+  await saveData();
+});
+
+document.getElementById('importCsvBtn').addEventListener('click', () => {
+  document.getElementById('importCsvInput').click();
+});
+
+document.getElementById('importCsvInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const text = ev.target.result;
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if(lines.length < 2){ alert("Fichier CSV vide ou invalide."); return; }
+    const rows = lines.slice(1);
+    const parsed = [];
+    rows.forEach((line, i) => {
+      const m = line.match(/^"((?:[^"]|"")*)",(.*)$/);
+      let name, rest;
+      if(m){ name = m[1].replace(/""/g,'"'); rest = m[2]; }
+      else { const parts = line.split(','); name = parts[0]; rest = parts.slice(1).join(','); }
+      const cols = rest.split(',');
+      const toNum = (v) => (v === undefined || v === '') ? null : Number(v);
+      parsed.push({ id: 'p'+i, name: name, power: toNum(cols[0]), kills: toNum(cols[1]), prevKills: toNum(cols[2]) });
+    });
+    if(parsed.length === 0){ alert("Aucune ligne valide trouvée."); return; }
+
+    const today = todayStr();
+    const oldByName = {};
+    players.forEach(p => { oldByName[p.name] = p; });
+    const isNewDay = dayStartDate !== today;
+
+    parsed.forEach(p => {
+      const old = oldByName[p.name];
+      if(isNewDay){
+        // nouveau jour : la référence du jour devient l'ancienne valeur de kills (avant cet import)
+        p.prevDayKills = old ? old.kills : p.kills;
+      } else {
+        // même jour qu'un précédent import : on garde la référence déjà posée aujourd'hui
+        p.prevDayKills = old && old.prevDayKills !== undefined ? old.prevDayKills : p.kills;
+      }
+    });
+    if(isNewDay) dayStartDate = today;
+
+    players = parsed;
+    saveData();
+    alert(`${parsed.length} joueurs importés.`);
+  };
+  reader.readAsText(file, 'utf-8');
+  e.target.value = '';
+});
+
+document.getElementById('resetDay').addEventListener('click', async () => {
+  if(!confirm("Forcer une nouvelle référence journalière maintenant (les kills actuels deviennent le point de départ du jour) ?")) return;
+  players.forEach(p => { p.prevDayKills = p.kills; });
+  dayStartDate = todayStr();
+  await saveData();
+});
+
+document.getElementById('gateSubmit').addEventListener('click', tryUnlock);
+document.getElementById('gatePassword').addEventListener('keydown', (e) => { if(e.key==='Enter') tryUnlock(); });
+function tryUnlock(){
+  if(typeof firebase === 'undefined'){
+    document.getElementById('gateError').textContent = "Erreur : Firebase n'a pas pu se charger (vérifie ta connexion internet ou réessaie).";
+    return;
+  }
+  if(firebaseInitError){
+    document.getElementById('gateError').textContent = "Erreur Firebase : " + firebaseInitError.message;
+    return;
+  }
+  const val = document.getElementById('gatePassword').value;
+  if(val === ADMIN_PASSWORD){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    startListening();
+  } else {
+    document.getElementById('gateError').textContent = 'Mot de passe incorrect';
+  }
+}
+
+</script>
+</body>
+</html>
