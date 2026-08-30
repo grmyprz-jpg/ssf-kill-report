@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -119,6 +118,7 @@
         <th style="text-align:right;">Troupes tuées</th>
         <th style="text-align:right;">Début semaine</th>
         <th style="text-align:right;">Kills cette semaine</th>
+        <th style="text-align:right;">Kills aujourd'hui</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -146,11 +146,16 @@ const docRef = db.collection('guilde').doc('data');
 const WEEKLY_TARGET = 1000000;
 let players = [];
 let weekStartDate = null;
+let dayStartDate = null;
 let sortMode = null;
 
 function diffOf(p){
   if(p.kills === null || p.kills === undefined || p.prevKills === null || p.prevKills === undefined) return null;
   return Number(p.kills) - Number(p.prevKills);
+}
+function diffDayOf(p){
+  if(p.kills === null || p.kills === undefined || p.prevDayKills === null || p.prevDayKills === undefined) return null;
+  return Number(p.kills) - Number(p.prevDayKills);
 }
 function fmt(n){
   if(n === null || n === undefined || n === "") return null;
@@ -167,6 +172,7 @@ docRef.onSnapshot((snap) => {
   if(data){
     players = data.players || [];
     weekStartDate = data.weekStartDate || null;
+    dayStartDate = data.dayStartDate || null;
     document.getElementById('statusLine').textContent = 'Connecté — mise à jour en temps réel';
     document.getElementById('statusLine').className = 'status live';
   } else {
@@ -205,6 +211,14 @@ function render(){
       const sign = d > 0 ? '+' : '';
       diffHtml = `<span class="${cls}">${sign}${fmt(d)}</span>`;
     }
+    const dd = diffDayOf(p);
+    let diffDayHtml;
+    if(dd === null){ diffDayHtml = `<span class="missing">?</span>`; }
+    else {
+      const cls = dd > 0 ? 'diff-pos' : (dd < 0 ? 'diff-neg' : 'diff-warn');
+      const sign = dd > 0 ? '+' : '';
+      diffDayHtml = `<span class="${cls}">${sign}${fmt(dd)}</span>`;
+    }
     tr.innerHTML = `
       <td class="rank">${idx+1}</td>
       <td class="name">${escapeHtml(p.name)}</td>
@@ -212,6 +226,7 @@ function render(){
       <td class="num">${p.kills===null||p.kills===undefined ? '<span class="missing">?</span>' : fmt(p.kills)}</td>
       <td class="num">${p.prevKills===null||p.prevKills===undefined ? '<span class="missing">?</span>' : fmt(p.prevKills)}</td>
       <td class="num">${diffHtml}</td>
+      <td class="num">${diffDayHtml}</td>
     `;
     tbody.appendChild(tr);
   });
